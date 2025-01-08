@@ -66,7 +66,8 @@ generate_env_vars() {
         echo "REDIS_PASSWORD=${REDIS_PASSWORD}"
         echo
         echo "# Traefik Dashboard"
-        echo "TRAEFIK_DASHBOARD_AUTH=${TRAEFIK_AUTH}"
+        # Usar comillas simples para evitar expansión de variables
+        echo "TRAEFIK_DASHBOARD_AUTH='$(cat ./shared/traefik_users)'"
     } > ./shared/.env
 
     # Generar n8n/.env
@@ -166,9 +167,9 @@ setup() {
             echo
 
             mkdir -p ./shared/traefik/dynamic
-            # Generar hash usando openssl en lugar de htpasswd
+            # Generar hash usando openssl y guardarlo con comillas simples
             HASHED_PASSWORD=$(openssl passwd -apr1 "$traefikpass")
-            echo "${traefikuser}:${HASHED_PASSWORD}" > ./shared/traefik_users
+            printf "%s:%s\n" "$traefikuser" "$HASHED_PASSWORD" > ./shared/traefik_users
         fi
 
         # Generar los archivos .env
