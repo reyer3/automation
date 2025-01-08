@@ -29,8 +29,9 @@ setup() {
 
     # Crear directorios necesarios
     echo -e "${GREEN}Creando directorios...${NC}"
-    mkdir -p /root/n8n/{postgresql,redis,letsencrypt,.n8n,n8n-files,chatwoot/storage}
-    chmod -R 777 /root/n8n
+    sudo mkdir -p /opt/mibot/{postgresql,redis,letsencrypt,.n8n,n8n-files,chatwoot/storage}
+    sudo chown -R $USER:$USER /opt/mibot
+    chmod -R 755 /opt/mibot
 
     # Asegurar permisos del script de inicialización de PostgreSQL
     echo -e "${GREEN}Configurando permisos de scripts...${NC}"
@@ -51,11 +52,6 @@ setup() {
         read -s traefikpass
         echo
 
-        # Instalar apache2-utils si no está instalado
-        if ! command -v htpasswd &> /dev/null; then
-            apt-get update && apt-get install -y apache2-utils
-        fi
-
         mkdir -p ./shared/traefik/dynamic
         htpasswd -nb $traefikuser $traefikpass > ./shared/traefik_users
     fi
@@ -70,7 +66,7 @@ setup() {
         cat > ./shared/.env << EOL
 # Configuración General
 DOMAIN_NAME=mibot.cl
-DATA_FOLDER=/root/n8n
+DATA_FOLDER=/opt/mibot
 SSL_EMAIL=ricardo@onbotgo.cl
 
 # Dominios
