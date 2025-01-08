@@ -63,7 +63,8 @@ setup() {
         POSTGRES_PASSWORD=$(openssl rand -base64 32)
         REDIS_PASSWORD=$(openssl rand -base64 32)
         
-        cat > ./shared/.env << EOL
+        # Eliminar el EOL para permitir la expansión de variables
+        cat > ./shared/.env << 'EOL'
 # Configuración General
 DOMAIN_NAME=mibot.cl
 DATA_FOLDER=/opt/mibot
@@ -76,16 +77,18 @@ CHAT_DOMAIN=chat-automation.mibot.cl
 
 # PostgreSQL
 POSTGRES_USER=postgres
-POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-POSTGRES_DB=postgres
-POSTGRES_MULTIPLE_DATABASES=n8n,chatwoot
-
-# Redis
-REDIS_PASSWORD=${REDIS_PASSWORD}
-
-# Traefik Dashboard
-TRAEFIK_DASHBOARD_AUTH=$(cat ./shared/traefik_users)
 EOL
+
+        # Agregar las contraseñas generadas
+        echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> ./shared/.env
+        echo "POSTGRES_DB=postgres" >> ./shared/.env
+        echo "POSTGRES_MULTIPLE_DATABASES=n8n,chatwoot" >> ./shared/.env
+        echo "" >> ./shared/.env
+        echo "# Redis" >> ./shared/.env
+        echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> ./shared/.env
+        echo "" >> ./shared/.env
+        echo "# Traefik Dashboard" >> ./shared/.env
+        echo "TRAEFIK_DASHBOARD_AUTH=$(cat ./shared/traefik_users)" >> ./shared/.env
     fi
 
     if [ ! -f ./n8n/.env ]; then
@@ -93,36 +96,40 @@ EOL
         N8N_ENCRYPTION_KEY=$(openssl rand -base64 32)
         N8N_BASIC_AUTH_PASSWORD=$(openssl rand -base64 16)
         
-        cat > ./n8n/.env << EOL
+        # Crear archivo N8N .env
+        cat > ./n8n/.env << 'EOL'
 # N8N Configuración
 N8N_PORT=5678
 N8N_PROTOCOL=https
-N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
-GENERIC_TIMEZONE=America/Santiago
-
-# N8N Autenticación
-N8N_BASIC_AUTH_ACTIVE=true
-N8N_BASIC_AUTH_USER=admin
-N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
-
-# Base de datos
-POSTGRES_DB=n8n
-POSTGRES_USER=n8n
-POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-
-# Redis
-REDIS_USER=default
-REDIS_PASSWORD=${REDIS_PASSWORD}
 EOL
+        echo "N8N_ENCRYPTION_KEY=$N8N_ENCRYPTION_KEY" >> ./n8n/.env
+        echo "GENERIC_TIMEZONE=America/Santiago" >> ./n8n/.env
+        echo "" >> ./n8n/.env
+        echo "# N8N Autenticación" >> ./n8n/.env
+        echo "N8N_BASIC_AUTH_ACTIVE=true" >> ./n8n/.env
+        echo "N8N_BASIC_AUTH_USER=admin" >> ./n8n/.env
+        echo "N8N_BASIC_AUTH_PASSWORD=$N8N_BASIC_AUTH_PASSWORD" >> ./n8n/.env
+        echo "" >> ./n8n/.env
+        echo "# Base de datos" >> ./n8n/.env
+        echo "POSTGRES_DB=n8n" >> ./n8n/.env
+        echo "POSTGRES_USER=n8n" >> ./n8n/.env
+        echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> ./n8n/.env
+        echo "" >> ./n8n/.env
+        echo "# Redis" >> ./n8n/.env
+        echo "REDIS_USER=default" >> ./n8n/.env
+        echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> ./n8n/.env
     fi
 
     if [ ! -f ./chat/.env ]; then
         # Generar clave para Chatwoot
         SECRET_KEY_BASE=$(openssl rand -base64 64)
         
-        cat > ./chat/.env << EOL
+        # Crear archivo Chatwoot .env
+        cat > ./chat/.env << 'EOL'
 # Chatwoot Configuración
-SECRET_KEY_BASE=${SECRET_KEY_BASE}
+EOL
+        echo "SECRET_KEY_BASE=$SECRET_KEY_BASE" >> ./chat/.env
+        cat >> ./chat/.env << 'EOL'
 RAILS_ENV=production
 NODE_ENV=production
 INSTALLATION_ENV=docker
@@ -130,12 +137,14 @@ INSTALLATION_ENV=docker
 # Base de datos
 POSTGRES_HOST=postgres
 POSTGRES_USERNAME=chatwoot
-POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-POSTGRES_DB=chatwoot
-
-# Redis
-REDIS_URL=redis://redis:6379
-REDIS_PASSWORD=${REDIS_PASSWORD}
+EOL
+        echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> ./chat/.env
+        echo "POSTGRES_DB=chatwoot" >> ./chat/.env
+        echo "" >> ./chat/.env
+        echo "# Redis" >> ./chat/.env
+        echo "REDIS_URL=redis://redis:6379" >> ./chat/.env
+        echo "REDIS_PASSWORD=$REDIS_PASSWORD" >> ./chat/.env
+        cat >> ./chat/.env << 'EOL'
 
 # Email (Configurar según necesidades)
 SMTP_DOMAIN=mibot.cl
