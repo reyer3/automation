@@ -1,0 +1,63 @@
+name: automation-chat
+
+services:
+  base: &base
+    image: chatwoot/chatwoot:latest
+    env_file: .env
+    volumes:
+      - ${DATA_FOLDER}/chatwoot/storage:/app/storage
+
+  rails:
+    <<: *base
+    depends_on:
+      - sidekiq
+    environment:
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USERNAME=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - REDIS_URL=redis://redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    entrypoint: docker/entrypoints/rails.sh
+    command: ['bundle', 'exec', 'rails', 's', '-p', '3000', '-b', '0.0.0.0']
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.chatwoot.rule=Host(`${CHAT_DOMAIN}`)
+      - traefik.http.routers.chatwoot.tls=true
+      - traefik.http.routers.chatwoot.entrypoints=websecure
+      - traefik.http.routers.chatwoot.tls.certresolver=mytlschallenge
+      - traefik.http.services.chatwoot.loadbalancer.server.port=3000
+      - traefik.http.middlewares.chatwoot-headers.headers.SSLRedirect=true
+      - traefik.http.middlewares.chatwoot-headers.headers.STSSeconds=315360000
+      - traefik.http.middlewares.chatwoot-headers.headers.browserXSSFilter=true
+      - traefik.http.middlewares.chatwoot-headers.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.chatwoot-headers.headers.forceSTSHeader=true
+      - traefik.http.middlewares.chatwoot-headers.headers.SSLHost=${CHAT_DOMAIN}
+      - traefik.http.middlewares.chatwoot-headers.headers.STSIncludeSubdomains=true
+      - traefik.http.middlewares.chatwoot-headers.headers.STSPreload=true
+      - traefik.http.routers.chatwoot.middlewares=chatwoot-headers
+    networks:
+      - automation-network
+    restart: unless-stopped
+
+  sidekiq:
+    <<: *base
+    environment:
+      - NODE_ENV=production
+      - RAILS_ENV=production
+      - INSTALLATION_ENV=docker
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USERNAME=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - REDIS_URL=redis://redis:6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: ['bundle', 'exec', 'sidekiq', '-C', 'config/sidekiq.yml']
+    networks:
+      - automation-network
+    restart: unless-stopped
+
+networks:
+  automation-network:
+    external: true
